@@ -270,8 +270,11 @@ app.get('/api/companies', (req, res) => {
   const { status, ownerUid } = req.query;
   let filtered = [...companies];
 
-  if (status) {
-    filtered = filtered.filter(c => (c.status || 'approved').toLowerCase() === status.toLowerCase());
+  if (status && status !== 'all') {
+    filtered = filtered.filter(c => (c.status || 'pending').toLowerCase() === status.toLowerCase());
+  } else if (!status && !ownerUid) {
+    // En el mapa público solo se muestran las empresas aprobadas
+    filtered = filtered.filter(c => (c.status || 'pending').toLowerCase() === 'approved');
   }
   if (ownerUid) {
     filtered = filtered.filter(c => c.ownerUid === ownerUid);
@@ -311,7 +314,7 @@ app.post('/api/companies', (req, res) => {
   }
 
   const companyId = id || `comp_${Date.now()}`;
-  const companyStatus = status || 'approved';
+  const companyStatus = status || 'pending';
 
   const newCompany = {
     id: companyId,
