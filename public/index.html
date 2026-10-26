@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bussearch | Red Social Corporativa & Geoespacial</title>
+  
+  <!-- Leaflet.js para Mapas OpenStreetMap (Sin tarjeta de crédito) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ==================== HEADER CORPORATIVO ==================== -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="logo-icon">B</div>
+        <div class="brand-text">
+          <span class="brand-title">Bussearch</span>
+          <span class="brand-subtitle">Corporate & Geospatial Network</span>
+        </div>
+      </div>
+
+      <!-- Navegación Principal -->
+      <nav class="nav-tabs">
+        <button class="nav-tab active" data-view="feed">
+          <span class="icon">📰</span>
+          <span>Feed Social</span>
+        </button>
+        <button class="nav-tab" data-view="map">
+          <span class="icon">🗺️</span>
+          <span>Mapa de Popularidad</span>
+        </button>
+        <button class="nav-tab" data-view="stats">
+          <span class="icon">📊</span>
+          <span>Inteligencia de Competencia</span>
+        </button>
+      </nav>
+
+      <!-- Selector de Sesión / Perfil (Firebase Auth Simulator) -->
+      <div class="user-session-bar">
+        <div class="profile-chip" id="currentProfileChip">
+          <img id="sessionAvatar" src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=120" alt="Avatar">
+          <div class="session-info">
+            <span class="session-name" id="sessionName">TechSupply Norte</span>
+            <span class="session-role badge-company" id="sessionRole">Empresa</span>
+          </div>
+        </div>
+        
+        <div class="session-switcher">
+          <label for="userSwitcher">Cambiar Rol:</label>
+          <select id="userSwitcher" class="select-role">
+            <option value="comp_01">🏢 TechSupply (Empresa - Reciprocidad ON)</option>
+            <option value="comp_02">🏢 Café Gourmet (Empresa - Reciprocidad OFF)</option>
+            <option value="comp_03">🏢 Ferretería Central (Empresa)</option>
+            <option value="user_01">👤 Ana Gómez (Usuario Común)</option>
+          </select>
+        </div>
+
+        <button class="btn-ai-trigger" id="toggleAiChatBtn">
+          <span class="ai-sparkle">✨</span>
+          <span>Asistente IA</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== CONTENIDO PRINCIPAL ==================== -->
+  <main class="main-content">
+
+    <!-- VISTA 1: FEED SOCIAL LINKEDIN-STYLE -->
+    <section id="view-feed" class="view-section active">
+      <div class="feed-grid">
+        
+        <!-- Columna Izquierda: Perfil & Métricas -->
+        <aside class="sidebar-left">
+          <div class="card profile-overview-card">
+            <div class="card-cover"></div>
+            <div class="card-avatar-wrap">
+              <img id="sideProfileAvatar" src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=120" alt="Avatar">
+            </div>
+            <div class="card-body text-center">
+              <h3 id="sideProfileName">TechSupply Norte</h3>
+              <p class="text-muted" id="sideProfileDesc">Distribuidor mayorista de hardware y periféricos.</p>
+              
+              <hr class="divider">
+              
+              <div class="profile-stats-row">
+                <div class="stat-item">
+                  <span class="stat-label">Rating Catálogo</span>
+                  <span class="stat-val" id="sideRatingVal">4.8 ★</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">Tier en Mapa</span>
+                  <span class="stat-val badge-tier" id="sideTierVal">👑 Platino</span>
+                </div>
+              </div>
+
+              <div class="reciprocity-status-box" id="sideReciprocityBox">
+                <span class="badge-status-dot green"></span>
+                <span>Reciprocidad de Datos: <strong>Activa</strong></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card hybrid-info-card">
+            <h4>Infraestructura Híbrida</h4>
+            <ul class="infra-list">
+              <li><span class="tag-firebase">Firebase Auth</span> Perfiles & Roles vinculados a UID</li>
+              <li><span class="tag-backend">Backend Secundario</span> Feed, Stock, Popularidad y Reciprocidad</li>
+              <li><span class="tag-leaflet">Leaflet + OSM</span> Sin costo ni tarjeta de crédito</li>
+            </ul>
+          </div>
+        </aside>
+
+        <!-- Columna Central: Crear Publicación y Feed -->
+        <div class="feed-center">
+          
+          <!-- Caja de Crear Publicación -->
+          <div class="card create-post-card">
+            <div class="post-box-header">
+              <img id="createPostAvatar" src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=120" alt="Avatar">
+              <textarea id="postContentInput" placeholder="¿Qué novedades, ofertas o actualizaciones de stock deseas compartir con la red corporativa?"></textarea>
+            </div>
+            <div class="post-box-footer">
+              <div class="tag-selector">
+                <span class="tag-pill">#StockDisponible</span>
+                <span class="tag-pill">#Innovación</span>
+                <span class="tag-pill">#RedCorporativa</span>
+              </div>
+              <button class="btn btn-primary" id="publishPostBtn">Publicar</button>
+            </div>
+          </div>
+
+          <!-- Listado de Publicaciones -->
+          <div id="postsContainer" class="posts-list">
+            <!-- Cargado dinámicamente con JavaScript -->
+          </div>
+        </div>
+
+        <!-- Columna Derecha: Ranking en Mapa & Stock en Tiempo Real -->
+        <aside class="sidebar-right">
+          <div class="card">
+            <div class="card-header-clean">
+              <h4>Top Calidad en el Mapa</h4>
+              <span class="text-caption">Por calificación de catálogo</span>
+            </div>
+            <div class="ranking-list" id="topCompaniesList">
+              <!-- Cargado dinámicamente -->
+            </div>
+          </div>
+
+          <div class="card tip-card">
+            <h4>💡 Algoritmo de Popularidad</h4>
+            <p>El tamaño del pin en el mapa no se compra ni depende de seguidores. Se calcula automáticamente según el <strong>promedio ponderado de las calificaciones de los productos</strong>.</p>
+            <button class="btn-link" id="goToMapBtn">Ver en el mapa →</button>
+          </div>
+        </aside>
+
+      </div>
+    </section>
+
+    <!-- VISTA 2: MAPA INTERACTIVO GEOESPACIAL (LEAFLET.JS) -->
+    <section id="view-map" class="view-section">
+      <div class="map-view-wrapper">
+        
+        <!-- Barra superior del mapa: Controles y Leyenda -->
+        <div class="map-toolbar">
+          <div class="toolbar-left">
+            <div class="search-input-wrap">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="mapSearchInput" placeholder="Buscar empresa o producto en el mapa...">
+            </div>
+            <select id="mapCategoryFilter" class="select-category">
+              <option value="all">Todas las categorías</option>
+              <option value="Tecnología e Informática">Tecnología e Informática</option>
+              <option value="Alimentos y Bebidas">Alimentos y Bebidas</option>
+              <option value="Construcción y Ferretería">Construcción y Ferretería</option>
+              <option value="Salud y Cuidado Personal">Salud y Cuidado Personal</option>
+            </select>
+          </div>
+
+          <div class="popularity-legend">
+            <span class="legend-title">Escala de Popularidad:</span>
+            <span class="legend-badge tier-plat">👑 Platino (4.6 - 5.0★)</span>
+            <span class="legend-badge tier-gold">💎 Oro (4.0 - 4.5★)</span>
+            <span class="legend-badge tier-silver">✨ Plata (3.0 - 3.9★)</span>
+            <span class="legend-badge tier-bronze">⭐ Bronce (< 3.0★)</span>
+          </div>
+        </div>
+
+        <!-- Contenedor del Mapa Leaflet -->
+        <div id="leafletMap" class="leaflet-container-custom"></div>
+
+        <!-- Drawer / Modal Lateral de Empresa y Catálogo de Stock -->
+        <aside class="company-drawer" id="companyDrawer">
+          <div class="drawer-header">
+            <button class="btn-close-drawer" id="closeDrawerBtn">✕</button>
+            <div class="drawer-badges">
+              <span class="badge-role" id="drawerRole">Empresa Verificada</span>
+              <span class="badge-tier" id="drawerTier">👑 Platino</span>
+            </div>
+            <h2 id="drawerTitle">TechSupply Norte</h2>
+            <p class="drawer-category" id="drawerCategory">Tecnología e Informática</p>
+          </div>
+
+          <div class="drawer-content">
+            <div class="drawer-rating-highlight">
+              <div class="rating-number" id="drawerAvgRating">4.8</div>
+              <div class="rating-meta">
+                <div class="stars-gold" id="drawerStars">★★★★★</div>
+                <div class="rating-sub" id="drawerVotes">Basado en 92 calificaciones de productos</div>
+              </div>
+            </div>
+
+            <p class="drawer-desc" id="drawerDesc">Descripción de la empresa.</p>
+
+            <div class="company-geo-info">
+              <div class="geo-item">
+                <span class="geo-icon">📍</span>
+                <span id="drawerAddress">Calle 100 # 15-20, Bogotá</span>
+              </div>
+              <div class="geo-item">
+                <span class="geo-icon">🌐</span>
+                <span id="drawerCoords">Lat: 4.6865, Lng: -74.0538</span>
+              </div>
+            </div>
+
+            <hr class="divider">
+
+            <!-- Catálogo y Stock en Tiempo Real -->
+            <div class="catalog-section">
+              <div class="catalog-header">
+                <h3>Catálogo y Stock en Tiempo Real</h3>
+                <span class="text-caption">Califica productos para influir en el mapa</span>
+              </div>
+
+              <div id="drawerProductsList" class="products-stack">
+                <!-- Se inyecta dinámicamente con cards de stock y botones de rating -->
+              </div>
+            </div>
+          </div>
+        </aside>
+
+      </div>
+    </section>
+
+    <!-- VISTA 3: MÓDULO DE ESTADÍSTICAS CRUZADAS (REGLA DE RECIPROCIDAD) -->
+    <section id="view-stats" class="view-section">
+      <div class="stats-dashboard-container">
+        
+        <!-- Banner Superior de Control de Privacidad y Reciprocidad -->
+        <div class="card reciprocity-control-card">
+          <div class="reciprocity-flex">
+            <div class="reciprocity-info">
+              <div class="reciprocity-title-row">
+                <span class="shield-icon">🛡️</span>
+                <h2>Módulo de Inteligencia de Competencia & Estadísticas Cruzadas</h2>
+              </div>
+              <p class="text-muted">
+                <strong>Regla Estricta de Reciprocidad:</strong> Una empresa solo puede consultar las estadísticas agregadas de su competencia 
+                si y solo si tiene activada la opción <em>"Compartir mis estadísticas"</em>.
+              </p>
+            </div>
+
+            <div class="reciprocity-switch-wrap">
+              <label class="switch-container">
+                <input type="checkbox" id="reciprocityToggle" checked>
+                <span class="switch-slider"></span>
+              </label>
+              <div class="switch-labels">
+                <span class="switch-title">Compartir mis estadísticas</span>
+                <span class="switch-subtitle" id="reciprocityStatusLabel">Estado: ACTIVADO (Acceso Habilitado)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CONTENEDOR 1: BLOQUEO CUANDO RECIPROCIDAD ESTÁ DESACTIVADA (403 FORBIDDEN) -->
+        <div class="card reciprocity-blocked-card hidden" id="reciprocityBlockedBox">
+          <div class="blocked-icon">🔒</div>
+          <h3>Acceso Bloqueado por Política de Reciprocidad</h3>
+          <p class="blocked-message">
+            Tu empresa tiene desactivada la opción <strong>"Compartir mis estadísticas"</strong>. 
+            El protocolo de privacidad bilateral impide acceder a las métricas del mercado y benchmarking de competidores sin compartir tus propios indicadores.
+          </p>
+          <div class="blocked-action-box">
+            <button class="btn btn-primary" id="enableReciprocityFromBlockedBtn">
+              🔓 Activar "Compartir mis estadísticas" para Desbloquear
+            </button>
+          </div>
+        </div>
+
+        <!-- CONTENEDOR 2: DASHBOARD DE ANALÍTICA DESBLOQUEADO -->
+        <div id="statsDashboardContent" class="stats-content-grid">
+          
+          <!-- Tarjetas KPI de Mercado -->
+          <div class="kpi-row">
+            <div class="card kpi-card">
+              <span class="kpi-title">Promedio del Mercado</span>
+              <span class="kpi-value" id="kpiAvgMarketRating">4.2 ★</span>
+              <span class="kpi-trend positive">Calificación media de productos</span>
+            </div>
+            <div class="card kpi-card">
+              <span class="kpi-title">Reseñas en la Red</span>
+              <span class="kpi-value" id="kpiTotalReviews">186</span>
+              <span class="kpi-trend">Calificaciones acumuladas</span>
+            </div>
+            <div class="card kpi-card">
+              <span class="kpi-title">Competidores Monitoreados</span>
+              <span class="kpi-value" id="kpiCompetitorsCount">3</span>
+              <span class="kpi-trend">En el mismo radio geoespacial</span>
+            </div>
+            <div class="card kpi-card">
+              <span class="kpi-title">Tu Posición en el Mapa</span>
+              <span class="kpi-value highlight" id="kpiMyTier">👑 Platino</span>
+              <span class="kpi-trend positive">Top de calidad en catálogo</span>
+            </div>
+          </div>
+
+          <!-- Tabla de Benchmarking de Competidores -->
+          <div class="card table-card">
+            <div class="card-header-clean">
+              <div>
+                <h3>Benchmarking Agregado de Competidores</h3>
+                <p class="text-caption">Datos procesados según calificaciones y disponibilidad de inventario</p>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="benchmark-table">
+                <thead>
+                  <tr>
+                    <th>Empresa Competidora</th>
+                    <th>Categoría</th>
+                    <th>Tier en Mapa</th>
+                    <th>Rating Promedio</th>
+                    <th>Total Reseñas</th>
+                    <th>Catálogo</th>
+                    <th>Producto Más Valorado</th>
+                  </tr>
+                </thead>
+                <tbody id="competitorTableBody">
+                  <!-- Inyectado por JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== ASISTENTE DE IA FLOTANTE ==================== -->
+  <div class="ai-chat-drawer" id="aiChatDrawer">
+    <div class="ai-drawer-header">
+      <div class="ai-header-title">
+        <span class="ai-avatar-badge">🤖</span>
+        <div>
+          <h4>Asistente Inteligente Bussearch</h4>
+          <span class="ai-status">Conectado a perfiles, catálogo y mapa</span>
+        </div>
+      </div>
+      <button class="btn-close-ai" id="closeAiChatBtn">✕</button>
+    </div>
+
+    <!-- Hilo de Mensajes -->
+    <div class="ai-messages-container" id="aiMessagesContainer">
+      <div class="ai-msg bot">
+        <div class="msg-bubble">
+          ¡Hola! Soy tu asistente de IA. Estoy sincronizado con las coordenadas del mapa y el catálogo de productos.
+          <br><br>
+          Prueba estas acciones:
+          <ul class="quick-examples">
+            <li>📍 <em>"¿Qué ferreterías o cafeterías hay a menos de 5 km?"</em></li>
+            <li>⭐ <em>"Calificar Monitor Gamer con 5 estrellas"</em></li>
+            <li>📊 <em>"Dame el resumen de rendimiento de mi empresa"</em></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sugerencias Rápidas -->
+    <div class="ai-quick-chips">
+      <button class="ai-chip" data-prompt="¿Qué empresas y productos hay cerca a menos de 5 km?">📍 Lugares a menos de 5 km</button>
+      <button class="ai-chip" data-prompt="Calificar Monitor Gamer 27 con 5 estrellas: Excelente calidad de imagen">⭐ Calificar Producto</button>
+      <button class="ai-chip" data-prompt="Dame el resumen de rendimiento de mi empresa">📊 Resumen de Rendimiento</button>
+    </div>
+
+    <!-- Input de Chat -->
+    <form class="ai-input-bar" id="aiChatForm">
+      <input type="text" id="aiMessageInput" placeholder="Haz una consulta o escribe un comando..." autocomplete="off">
+      <button type="submit" class="btn-send-ai" id="sendAiBtn">➤</button>
+    </form>
+  </div>
+
+  <!-- Scripts -->
+  <script src="firebase-config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

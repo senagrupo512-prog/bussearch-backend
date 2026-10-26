@@ -1,0 +1,17 @@
+{
+  "name": "bussearch-corporate-geosocial",
+  "version": "1.0.0",
+  "description": "Plataforma híbrida: Red Social Corporativa + Mapa Geoespacial con Firebase Auth, Leaflet.js, Control de Stock y Chatbot IA",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "mysql2": "^3.24.6",
+    "pg": "^8.23.1"
+  }
+}
