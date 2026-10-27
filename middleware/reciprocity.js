@@ -1,17 +1,16 @@
 /**
  * Middleware de Reciprocidad para Inteligencia de Competencia
  * 
- * REGLA ESTRICTA DE NEGOCIO:
- * Una empresa 'A' SOLO puede consultar las estadísticas agregadas de su competencia
- * SI Y SOLO SI tiene activada la opción de "Compartir mis estadísticas" (share_stats === true).
- * Si está desactivada o si el usuario no es una empresa, el sistema bloquea el acceso.
+ * REGLA DE NEGOCIO:
+ * Una empresa 'A' puede consultar las estadísticas agregadas de su competencia
+ * SI Y SOLO SI:
+ * 1. Tiene activada la opción "Compartir mis estadísticas" (share_stats === true), O
+ * 2. Ya ha publicado productos en su catálogo de stock (reciprocidad activa).
  */
 
-function enforceReciprocityRule(getCompanyById) {
+function enforceReciprocityRule(getCompanyById, getCompanyProducts) {
   return async function(req, res, next) {
     try {
-      // 1. Obtener la identificación de la empresa que hace la solicitud
-      // En un entorno de producción, esto proviene del token de Firebase Auth verificado (req.user.companyId)
       const companyId = req.headers['x-company-id'] || req.query.companyId || (req.user && req.user.companyId);
 
       if (!companyId) {
@@ -22,7 +21,6 @@ function enforceReciprocityRule(getCompanyById) {
         });
       }
 
-      // 2. Obtener el perfil y configuración de privacidad de la empresa
       const company = await getCompanyById(companyId);
 
       if (!company) {
@@ -33,23 +31,29 @@ function enforceReciprocityRule(getCompanyById) {
         });
       }
 
-      // 3. VALIDACIÓN DE LA REGLA DE RECIPROCIDAD
-      // Si la empresa NO comparte sus estadísticas, queda expresamente BLOQUEADA
-      if (!company.share_stats) {
+      // VALIDACIÓN DE LA REGLA DE RECIPROCIDAD:
+      // Si la empresa subió stock o tiene share_stats activo, se cumple la reciprocidad.
+      const companyStock = typeof getCompanyProducts === 'function' ? getCompanyProducts(company.id) : [];
+      const hasStock = Array.isArray(companyStock) && companyStock.length > 0;
+
+      if (!company.share_stats && !hasStock) {
         return res.status(403).json({
           success: false,
           code: 'RECIPROCITY_VIOLATION',
-          message: 'Acceso Bloqueado: Para consultar las métricas agregadas del mercado y de tus competidores, tu empresa debe tener activada la opción "Compartir mis estadísticas".',
+          message: 'Acceso Bloqueado: Para consultar las métricas agregadas del mercado y de tus competidores, tu empresa debe publicar al menos un producto en su stock o activar "Compartir mis estadísticas".',
           details: {
             companyId: company.id,
             companyName: company.name,
             shareStatsEnabled: false,
-            actionRequired: 'Activa la casilla "Compartir mis estadísticas" en tu panel de configuración para desbloquear este módulo.'
+            hasStock: false,
+            actionRequired: 'Publica productos en tu stock o activa la opción "Compartir mis estadísticas" en tu panel para desbloquear este módulo.'
           }
         });
       }
 
-      // 4. Inyectar la empresa autorizada en la solicitud y continuar
+      // Si tiene stock pero no tenía el flag encendido, encenderlo automáticamente
+      company.share_stats = true;
+
       req.authenticatedCompany = company;
       next();
     } catch (error) {

@@ -437,7 +437,22 @@ app.post('/api/companies/:id/stock', (req, res) => {
     products[id].push(newItem);
   }
 
-  res.status(201).json({ success: true, data: newItem });
+  // Activar reciprocidad automáticamente: al subir stock, share_stats = true
+  const company = companies.find(c => c.id === id);
+  if (company) {
+    company.share_stats = true;
+    if (company.ownerUid && users[company.ownerUid]) {
+      users[company.ownerUid].companyId = company.id;
+      users[company.ownerUid].role = 'company';
+    }
+  }
+
+  res.status(201).json({
+    success: true,
+    data: newItem,
+    shareStats: true,
+    message: 'Producto guardado exitosamente. Reciprocidad activada.'
+  });
 });
 
 app.delete('/api/companies/:id/stock/:itemId', (req, res) => {
@@ -547,7 +562,7 @@ app.patch('/api/companies/:id/share-stats', (req, res) => {
   });
 });
 
-app.get('/api/competitors/stats', enforceReciprocityRule(getCompanyById), (req, res) => {
+app.get('/api/competitors/stats', enforceReciprocityRule(getCompanyById, getCompanyProducts), (req, res) => {
   const requestingCompany = req.authenticatedCompany;
   const allEnriched = PopularityService.enrichCompaniesWithPopularity(companies, getCompanyProducts);
   const competitors = allEnriched.filter(c => c.id !== requestingCompany.id);
